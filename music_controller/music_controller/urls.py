@@ -16,7 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('api.urls')) # '' this takes every string it can possibly be and send it to api.urls 
-]                                 # if it was something like '.../' this. It would send the rest of the url to api.urls 
+    path('api/', include('api.urls')),
+    path('', include('frontend.urls'))
+    # '' this takes every string it can possibly be and send it to api.urls 
+    # if it is something like '.../' this. It would send the rest of the url to api.urls
+]                                    
