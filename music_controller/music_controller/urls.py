@@ -20,7 +20,8 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
-    path('', include('frontend.urls'))
+    path('', include('frontend.urls')),
+    path('spotify/', include('spotify.urls'))
     # '' this takes every string it can possibly be and send it to api.urls 
     # if it is something like '.../' this. It would send the rest of the url to api.urls
 ]                                    
