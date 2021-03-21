@@ -18,13 +18,13 @@ class AuthURL(APIView):
             'client_id': CLIENT_ID
         }).prepare().url
 
-        return Response({'url': url}, status=status)
+        return Response({'url': url}, status=status.HTTP_200_OK)
 
 
 def spotify_callback(request, format=None): # After the user auth the program, Spotify is gonna return a code that the program will use.
     code = request.GET.get('code')
     error = request.GET.get('error')
-
+    print(1)
     response = post('https://accounts.spotify.com/api/token', data={
         'grant_type': 'authorization_code',
         'code': code,

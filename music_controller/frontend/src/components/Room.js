@@ -46,16 +46,16 @@ export default class Room extends Component {
     }
 
     authenticateSpotify() {
-        fetch('/spotify/is-authenticated')
-        .then((response) => response.json())
-        .then((data) => {
-            console.log(data)
-            this.setState({ spotifyAuthenticated: data.status });
-            if (!data.status) { // if the function returns False
+        fetch("/spotify/is-authenticated")
+            .then((response) => response.json())
+            .then((data) => {
+                this.setState({ spotifyAuthenticated: data.status });
+                console.log(data.status);
+                if (!data.status) { // if the function returns False
                 fetch('/spotify/get-auth-url')
-                .then((response) => response.json())
-                .then((data) => {
-                    window.location.replace(data.url); // redirecting to spotify authorization page
+                    .then((response) => response.json())
+                    .then((data) => {
+                        window.location.replace(data.url); // redirecting to spotify authorization page
                 });
             }
         });
