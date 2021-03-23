@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Grid, Button, Typography, responsiveFontSizes} from "@material-ui/core";
 import CreateRoomPage from "./CreateRoomPage";
+import SelectInput from '@material-ui/core/Select/SelectInput';
 
 
 export default class Room extends Component {
@@ -11,7 +12,8 @@ export default class Room extends Component {
             guestCanPause: false,
             isHost: false,
             showSettings: false,
-            spotifyAuthenticated: false
+            spotifyAuthenticated: false,
+            song: {},
         };
         this.roomCode = this.props.match.params.roomCode;
         // !!!getting the specific parameter (code of the room from the url) from HomePage.js!!!
@@ -21,10 +23,12 @@ export default class Room extends Component {
         this.renderSettings = this.renderSettings.bind(this);
         this.getRoomDetails = this.getRoomDetails.bind(this);
         this.authenticateSpotify = this.authenticateSpotify.bind(this);
+        this.getCurrentSong = this.getCurrentSong.bind(this);
         this.getRoomDetails();
     }
 
-    getRoomDetails() {
+    async getRoomDetails() {
+        // console.log("HEY");
         fetch('/api/get-room' + '?code=' + this.roomCode)
         .then((response) => {
             if (!response.ok) { // the user in a room that doesnt exist
@@ -39,18 +43,22 @@ export default class Room extends Component {
                 guestCanPause: data.guest_can_pause,
                 isHost: data.is_host,
             });
-            if (this.state.isHost) {
+            console.log(data.is_host, 1);
+            // this.setState does not work instantly so below if statement is not working properly all the time
+            if (data.is_host) {
                 this.authenticateSpotify();
-            }
+            };
         });
+        this.getCurrentSong();
     }
 
     authenticateSpotify() {
+        console.log("HEYyyyy");
         fetch("/spotify/is-authenticated")
             .then((response) => response.json())
             .then((data) => {
-                this.setState({ spotifyAuthenticated: data.status });
                 console.log(data.status);
+                this.setState({ spotifyAuthenticated: data.status });
                 if (!data.status) { // if the function returns False
                 fetch('/spotify/get-auth-url')
                     .then((response) => response.json())
@@ -59,6 +67,26 @@ export default class Room extends Component {
                 });
             }
         });
+    }
+
+    getCurrentSong() {
+        console.log("at getCurrentSong");
+        fetch("/spotify/current-song")
+            .then((response) => {
+                if(!response.ok) {
+                    console.log(1);
+                    return {};
+                }
+                else {
+                    console.log(2);
+                    return response.json();
+                }
+            })
+            .then((data) => {
+                console.log(data);
+                this.setState({ song: data });
+            });
+        console.log("at getCurrentSong2");
     }
 
     leaveButtonPressed() {
@@ -120,21 +148,7 @@ export default class Room extends Component {
                         Code: {this.roomCode}
                     </Typography>
                 </Grid>
-                <Grid item xs={12} align="center">
-                    <Typography variant="h6" component="h6">
-                        Votes: {this.state.votesToSkip}
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} align="center">
-                    <Typography variant="h6" component="h6">
-                        Guest Can Pause: {this.state.guestCanPause.toString()}
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} align="center">
-                    <Typography variant="h6" component="h6">
-                        Host: {this.state.isHost.toString()}
-                    </Typography>
-                </Grid>
+                {this.state.song}
                 {this.state.isHost ? this.renderSettingsButton(): null}
                 <Grid item xs={12} align="center">
                     <Button variant="contained" color="secondary" onClick={ this.leaveButtonPressed }>

@@ -28,7 +28,7 @@ class GetRoom(APIView):
             if room.exists():
                 data = RoomSerializer(room[0]).data
                 data['is_host'] = self.request.session.session_key == room[0].host 
-                # checking to see if the user that requested is the host of the room
+                # checking to see if the user that requested this page, is the host of the room
                 return Response(data, status=status.HTTP_200_OK)
             return Response({'Room Not Found': 'Invalid Room Code.'}, status=status.HTTP_404_NOT_FOUND)
 
