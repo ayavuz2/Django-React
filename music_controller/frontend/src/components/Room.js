@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { Grid, Button, Typography, responsiveFontSizes} from "@material-ui/core";
+import { Grid, Button, Typography } from "@material-ui/core";
 import CreateRoomPage from "./CreateRoomPage";
-import SelectInput from '@material-ui/core/Select/SelectInput';
+import MusicPlayer from "./MusicPlayer";
+
 
 
 export default class Room extends Component {
@@ -27,7 +28,15 @@ export default class Room extends Component {
         this.getRoomDetails();
     }
 
-    async getRoomDetails() {
+    componentDidMount() {
+        this.interval = setInterval(this.getCurrentSong, 1000) // calling getCurrenSong function every second
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.interval)
+    }
+    
+    getRoomDetails() {
         // console.log("HEY");
         fetch('/api/get-room' + '?code=' + this.roomCode)
         .then((response) => {
@@ -43,21 +52,19 @@ export default class Room extends Component {
                 guestCanPause: data.guest_can_pause,
                 isHost: data.is_host,
             });
-            console.log(data.is_host, 1);
-            // this.setState does not work instantly so below if statement is not working properly all the time
+            // console.log(data.is_host);
+            // this.setState does not update itself instantly so below if statement is not working properly all the time with this.state.isHost
             if (data.is_host) {
                 this.authenticateSpotify();
             };
         });
-        this.getCurrentSong();
     }
 
     authenticateSpotify() {
-        console.log("HEYyyyy");
         fetch("/spotify/is-authenticated")
             .then((response) => response.json())
             .then((data) => {
-                console.log(data.status);
+                // console.log(data.status);
                 this.setState({ spotifyAuthenticated: data.status });
                 if (!data.status) { // if the function returns False
                 fetch('/spotify/get-auth-url')
@@ -70,15 +77,14 @@ export default class Room extends Component {
     }
 
     getCurrentSong() {
-        console.log("at getCurrentSong");
         fetch("/spotify/current-song")
             .then((response) => {
                 if(!response.ok) {
-                    console.log(1);
+                    // console.log(1);
                     return {};
                 }
                 else {
-                    console.log(2);
+                    // console.log(2);
                     return response.json();
                 }
             })
@@ -86,7 +92,6 @@ export default class Room extends Component {
                 console.log(data);
                 this.setState({ song: data });
             });
-        console.log("at getCurrentSong2");
     }
 
     leaveButtonPressed() {
@@ -148,14 +153,14 @@ export default class Room extends Component {
                         Code: {this.roomCode}
                     </Typography>
                 </Grid>
-                {this.state.song}
+                <MusicPlayer {...this.state.song} />
                 {this.state.isHost ? this.renderSettingsButton(): null}
                 <Grid item xs={12} align="center">
                     <Button variant="contained" color="secondary" onClick={ this.leaveButtonPressed }>
                         Leave Room
                     </Button>
                 </Grid>
-            </Grid>            
+            </Grid>
         );
     }
 }

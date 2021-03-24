@@ -11,21 +11,23 @@ BASE_URL = "https://api.spotify.com/v1/me/"
 def get_user_tokens(session_key):
     user_tokens = SpotifyToken.objects.filter(user=session_key)
     if user_tokens.exists():
+        # print(1)
         return user_tokens[0]
     else:
+        # print(2)
         return None
 
 
-def update_or_create_user_tokens(session_key, access_token, token_type, expires_in, refresh_token):
+def update_or_create_user_tokens(session_key, access_token, token_type, expires_in, refresh_token=None):
     tokens = get_user_tokens(session_key)
     expires_in = timezone.now() + timedelta(seconds=expires_in)
-    
-    if tokens:
+
+    if tokens: # if the tokens does exits already, we are not gonna update the refresh token because spotify does not response with it again. So looks like we dont need it to be updated. 
         tokens.access_token = access_token
-        tokens.refresh_token = refresh_token
+        # tokens.refresh_token = refresh_token
         tokens.expires_in = expires_in
         tokens.token_type = token_type
-        tokens.save(update_fields=['access_token', 'refresh_token', 'expires_in', 'token_type'])
+        tokens.save(update_fields=['access_token', 'expires_in', 'token_type'])
     else:
         tokens = SpotifyToken(user=session_key, access_token=access_token, 
                                 refresh_token=refresh_token, token_type=token_type, expires_in=expires_in)
@@ -34,10 +36,13 @@ def update_or_create_user_tokens(session_key, access_token, token_type, expires_
 
 def is_spotify_authenticated(session_key):
     tokens = get_user_tokens(session_key)
+
     if tokens:
         expiry = tokens.expires_in
+        # print(True if expiry <= timezone.now() else False)
         if expiry <= timezone.now():
-            refresh_spotify_token(session_key)
+            refresh_spotify_token(session_key) # this line gives error
+            print(get_user_tokens(session_key).expires_in, 2)
 
         return True
 
@@ -45,25 +50,26 @@ def is_spotify_authenticated(session_key):
 
 def refresh_spotify_token(session_key):
     refresh_token = get_user_tokens(session_key).refresh_token
-
     response = post('https://accounts.spotify.com/api/token', data={
         'grant_type': 'refresh_token',
         'refresh_token': refresh_token,
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET
     }).json()
-
+    # response that we get does not include refresh token for some reason. So below refres_token line gives an error!
+    # in the spotify's guide it says it does not return refresh tokens again anyway. So we do not need to refresh the refresh_tokens ???
+    # This way it works. We do not need "refresh_token" to be updated over and over again.
     access_token = response.get('access_token')
     token_type = response.get('token_type')
     expires_in = response.get('expires_in')
-    refresh_token = response.get('refresh_token')
+    # refresh_token = response.get('refresh_token')
 
-    update_or_create_user_tokens(session_key, access_token, token_type, expires_in, refresh_token)
+    update_or_create_user_tokens(session_key, access_token, token_type, expires_in)
     
 
 def execute_spotify_api_request(session_key, endpoint, post_=False, put_=False):
     tokens = get_user_tokens(session_key)
-    headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tokens.access_token}
+    headers = {'Content-Type': 'application/json', 'Authorization': "Bearer " + tokens.access_token}
     
     if post_:
         post(BASE_URL + endpoint, headers=headers)
