@@ -10,6 +10,24 @@ export default class MusicPlayer extends Component {
         super(props);
     }
 
+    // Play/Pause feature only works for Premium Spotify Users !!!
+    pauseSong() {
+        const requestOptions = {
+            method: 'PUT',
+            headers: {"Content-Type": "applicattion/json"},
+        };
+        fetch("/spotify/pause", requestOptions);
+    }
+
+    // Play/Pause feature only works for Premium Spotify Users !!!
+    playSong() {
+        const requestOptions = {
+            method: 'PUT',
+            headers: {"Content-Type": "applicattion/json"},
+        };
+        fetch("/spotify/play", requestOptions);
+    }
+
     render() {
         const songProgress = (this.props.time / this.props.duration) * 100;
 
@@ -27,7 +45,8 @@ export default class MusicPlayer extends Component {
                             {this.props.artist}
                         </Typography>
                         <div>
-                            <IconButton>
+                            <IconButton onClick={() => this.props.is_playing ? this.pauseSong() : this.playSong()}>
+                                {console.log(this.props.is_playing)}
                                 {this.props.is_playing ? <PauseIcon /> : <PlayArrowIcon />}
                             </IconButton>
                             <IconButton>
