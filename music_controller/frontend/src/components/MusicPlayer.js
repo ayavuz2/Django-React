@@ -10,11 +10,20 @@ export default class MusicPlayer extends Component {
         super(props);
     }
 
+    // Skipping feature only works for Premium Spotify Users !!!
+    skipSong() {
+        const requestOptions = {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+        };
+        fetch("/spotify/skip", requestOptions);
+    }
+
     // Play/Pause feature only works for Premium Spotify Users !!!
     pauseSong() {
         const requestOptions = {
             method: 'PUT',
-            headers: {"Content-Type": "applicattion/json"},
+            headers: { "Content-Type": "application/json" },
         };
         fetch("/spotify/pause", requestOptions);
     }
@@ -23,7 +32,7 @@ export default class MusicPlayer extends Component {
     playSong() {
         const requestOptions = {
             method: 'PUT',
-            headers: {"Content-Type": "applicattion/json"},
+            headers: { "Content-Type": "application/json" },
         };
         fetch("/spotify/play", requestOptions);
     }
@@ -46,11 +55,12 @@ export default class MusicPlayer extends Component {
                         </Typography>
                         <div>
                             <IconButton onClick={() => this.props.is_playing ? this.pauseSong() : this.playSong()}>
-                                {console.log(this.props.is_playing)}
                                 {this.props.is_playing ? <PauseIcon /> : <PlayArrowIcon />}
                             </IconButton>
                             <IconButton>
-                                <SkipNextIcon />
+                                {this.props.votes} / {this.props.votes_required} <SkipNextIcon onClick={() => this.skipSong() }/>
+                                {/* Binding is not necessary if you call the function through an arrow function "() => {...}" like we did above  */}
+                                {/* Just for the record, we do not even have to this bacuse we are not using "this" keyword in skipSong function :)*/}
                             </IconButton>
                         </div>
                     </Grid>

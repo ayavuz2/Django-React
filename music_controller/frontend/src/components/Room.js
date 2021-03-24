@@ -153,7 +153,7 @@ export default class Room extends Component {
                         Code: {this.roomCode}
                     </Typography>
                 </Grid>
-                <MusicPlayer {...this.state.song} />
+                <MusicPlayer {...this.state.song} /* We can access the song data in MusicPlayer now, using this.props.(...)*/ />
                 {this.state.isHost ? this.renderSettingsButton(): null}
                 <Grid item xs={12} align="center">
                     <Button variant="contained" color="secondary" onClick={ this.leaveButtonPressed }>
