@@ -65,6 +65,7 @@ export default class MusicPlayer extends Component {
                         </div>
                     </Grid>
                 </Grid>
+                
                 <LinearProgress variant="determinate" value={songProgress} />
             </Card>
         )
