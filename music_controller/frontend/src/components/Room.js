@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Grid, Button, Typography } from "@material-ui/core";
 import CreateRoomPage from "./CreateRoomPage";
 import MusicPlayer from "./MusicPlayer";
-
+import ChatBox, { ChatFrame } from 'react-chat-plugin';
 
 
 export default class Room extends Component {
@@ -15,6 +15,8 @@ export default class Room extends Component {
             showSettings: false,
             spotifyAuthenticated: false,
             song: {},
+            messages: [],
+            msg: "",
         };
         this.roomCode = this.props.match.params.roomCode;
         // !!!getting the specific parameter (code of the room from the url) from HomePage.js!!!
@@ -25,8 +27,22 @@ export default class Room extends Component {
         this.getRoomDetails = this.getRoomDetails.bind(this);
         this.authenticateSpotify = this.authenticateSpotify.bind(this);
         this.getCurrentSong = this.getCurrentSong.bind(this);
+        this.handleOnSendMessage = this.handleOnSendMessage.bind(this);
+        this.sendMessageBackend = this.sendMessageBackend.bind(this);
+        this.getRoomMessages = this.getRoomMessages.bind(this);
         this.getRoomDetails();
     }
+
+    /*
+    componentDidUpdate() {
+        if (this.state.msg !== "") {
+            console.log(this.state.msg)
+            this.sendMessageBackend();
+            this.state.msg = "";
+            console.log(this.state.msg)
+        }
+    }
+    */
 
     componentDidMount() {
         this.interval = setInterval(this.getCurrentSong, 1000) // calling getCurrenSong function every second
@@ -58,6 +74,7 @@ export default class Room extends Component {
                 this.authenticateSpotify();
             };
         });
+        this.getRoomMessages()
     }
 
     authenticateSpotify() {
@@ -111,6 +128,76 @@ export default class Room extends Component {
         });
     }
 
+    getRoomMessages() {
+        fetch("/api/get-room-messages").then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+            else {
+                return {};
+            }
+        }).then((data) => {
+            console.log(data);
+        });
+    }
+
+    sendMessageBackend() {
+        const requestOptions = {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                content: this.state.msg,
+            }),
+        };
+
+        console.log(requestOptions);
+
+        fetch("/api/send-message", requestOptions)
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+            else {
+                return {};
+            }
+        });
+    }
+
+    handleOnSendMessage(message) {
+        this.setState({
+            messages: this.state.messages.concat({ 
+                author: {
+                    username: 'user2',
+                    id: 2,
+                },
+                text: message,
+                timestamp: +new Date(),
+                type: 'text',
+            }),
+            // msg: message,
+        });
+
+        const requestOptions = {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                content: message,
+            }),
+        };
+
+        // console.log(requestOptions);
+
+        fetch("/api/send-message", requestOptions)
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+            else {
+                return {};
+            }
+        });
+      }
+
     renderSettings() {
         return (
             <Grid container spacing={1}>
@@ -159,6 +246,15 @@ export default class Room extends Component {
                     <Button variant="contained" color="secondary" onClick={ this.leaveButtonPressed }>
                         Leave Room
                     </Button>
+                </Grid>
+                <Grid item xs={12} align="center">
+                    <ChatBox 
+                        messages={this.state.messages} 
+                        userId={1} 
+                        onSendMessage={this.handleOnSendMessage} 
+                        width={'300px'} 
+                        height={'300px'} 
+                    />
                 </Grid>
             </Grid>
         );

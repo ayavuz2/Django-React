@@ -1,14 +1,13 @@
 from django.shortcuts import render
 from rest_framework import generics, status
-from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer
-from .models import Room
+from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, MessageSerializer, MessagesSerializer
+from .models import Room, Message
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
 
 
 # Create your views here.
-
 
 class RoomView(generics.ListAPIView):
     queryset = Room.objects.all()
@@ -33,6 +32,54 @@ class GetRoom(APIView):
             return Response({'Room Not Found': 'Invalid Room Code.'}, status=status.HTTP_404_NOT_FOUND)
 
         return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendMessage(APIView):
+    serializer_class = MessageSerializer
+    
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+
+        room_code = self.request.session.get('room_code')
+        room = Room.objects.filter(code=room_code)
+        if room.exists():
+            room = room[0]
+        else:
+            return Response({'Bad_Request': 'Room not found!'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            content = serializer.data.get("content")
+            message = Message(author=self.request.session.session_key, content=content, room=room)
+            message.save()
+
+        return Response({'message': 'Message object created.'}, status=status.HTTP_201_CREATED)
+
+
+class GetRoomMessages(APIView):
+    def get(self, request, format=None):
+        session_id = self.request.session.session_key
+
+        room_code = self.request.session.get('room_code')
+        room = Room.objects.filter(code=room_code)
+
+        if room.exists():
+            room = room[0]
+        else:
+            return Response({"message": "User not in a room."}, status=status.HTTP_404_NOT_FOUND)
+
+        messages = Message.objects.filter(room=room.id)
+
+        message_list = []
+        for msg in messages:
+            data = MessagesSerializer(msg).data
+            author = data['author']
+            data['author'] = True if author == session_id else False
+            message_list.append(data)
+
+        return Response(message_list, status=status.HTTP_200_OK)
 
 
 class JoinRoom(APIView):
@@ -63,12 +110,13 @@ class CreateRoomView(APIView):
             self.request.session.create()
 
         serializer = self.serializer_class(data=request.data)
+
         if serializer.is_valid():
             guest_can_pause = serializer.data.get('guest_can_pause')
             votes_to_skip = serializer.data.get('votes_to_skip')
             host = self.request.session.session_key
             queryset = Room.objects.filter(host=host)
-            
+
             if queryset.exists():
                 room = queryset[0]
                 room.guest_can_pause = guest_can_pause

@@ -1,4 +1,5 @@
 from django.db import models
+# from django.contrib.postgres.fields import ArrayField
 import string
 import random
 
@@ -21,3 +22,10 @@ class Room(models.Model):
     votes_to_skip = models.IntegerField(null=False, default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     current_song = models.CharField(max_length=50, null=True)
+
+
+class Message(models.Model):
+    author = models.CharField(null=False, default="user1", max_length=32)
+    content = models.CharField(null=False, default="No_String", max_length=50)
+    # time_stamp = models.DateTimeField(auto_now_add=True)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)

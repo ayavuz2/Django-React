@@ -4,3 +4,4 @@ __pycache__
 codes.py
 credentials.py
 db.sqlite3
+.vscode

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from "react-router-dom";
 import {
-    Grid, Button, Typography, TextField, FormHelperText, FormControl, FormLabel, FormControlLabel, Radio, RadioGroup
+    Grid, Button, Typography, TextField, FormHelperText, FormControl, FormControlLabel, Radio, RadioGroup
 } from "@material-ui/core";
 import { Collapse } from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
@@ -54,6 +54,8 @@ export default class CreateRooomPage extends Component {
                 guest_can_pause: this.state.guestCanPause,
             }),
         };
+
+        console.log(requestOptions);
         fetch("/api/create-room", requestOptions)
         .then((response) => response.json())
         .then((data) => this.props.history.push('/room/' + data.code));

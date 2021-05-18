@@ -104,6 +104,7 @@ class CurrentSong(APIView):
 
         return Response(song, status=status.HTTP_200_OK)
 
+
     def update_room_song(self, room, song_id):
         current_song = room.current_song
         
