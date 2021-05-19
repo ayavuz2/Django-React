@@ -22,6 +22,8 @@ class GetRoom(APIView):
         code = request.GET.get(self.lookup_url_kwarg)
         # request.GET is giving info about the URL from the get request
         # .get is looking for a parameter that matches with the one that is inside of the parentheses.
+        self.request.session['message_count'] = 0
+
         if code != None:
             room = Room.objects.filter(code=code)
             if room.exists():
@@ -55,6 +57,8 @@ class SendMessage(APIView):
             message = Message(author=self.request.session.session_key, content=content, room=room)
             message.save()
 
+        self.request.session['message_count'] += 1
+
         return Response({'message': 'Message object created.'}, status=status.HTTP_201_CREATED)
 
 
@@ -72,12 +76,19 @@ class GetRoomMessages(APIView):
 
         messages = Message.objects.filter(room=room.id)
 
+        msg_count = self.request.session['message_count']
+
+        if msg_count == len(messages): # checking to see if there are new messages. If not, return
+            return Response({"message": "No new messages."}, status=status.HTTP_204_NO_CONTENT)
+
         message_list = []
-        for msg in messages:
-            data = MessagesSerializer(msg).data
+        for message in messages[msg_count:]: # only getting the new messages
+            data = MessagesSerializer(message).data
             author = data['author']
             data['author'] = True if author == session_id else False
             message_list.append(data)
+
+        self.request.session['message_count'] += len(message_list)
 
         return Response(message_list, status=status.HTTP_200_OK)
 
@@ -89,12 +100,15 @@ class JoinRoom(APIView):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
+        self.request.session['message_count'] = 0
+
         code = request.data.get(self.lookup_url_kwarg)
         if code != None:
             room_result = Room.objects.filter(code=code)
+
             if room_result.exists():
                 room = room_result[0]
-                self.request.session['room_code'] = code # storing user info
+                self.request.session['room_code'] = code # storing room_code at user's session
                 return Response({'message': 'Room Joined.'}, status=status.HTTP_200_OK)
             
             return Response({'Bad Request': 'Invalid room code.'}, status=status.HTTP_400_BAD_REQUEST)                
@@ -122,8 +136,10 @@ class CreateRoomView(APIView):
                 room.guest_can_pause = guest_can_pause
                 room.votes_to_skip = votes_to_skip
                 room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
-                self.request.session['room_code'] = room.code # storing the code of the room that the user in. (at user's session)
                 
+                self.request.session['room_code'] = room.code # storing the code of the room that the user in. (at user's session)
+                self.request.session['message_count'] = 0
+
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
             
             else:

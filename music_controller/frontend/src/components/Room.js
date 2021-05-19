@@ -16,7 +16,6 @@ export default class Room extends Component {
             spotifyAuthenticated: false,
             song: {},
             messages: [],
-            msg: "",
         };
         this.roomCode = this.props.match.params.roomCode;
         // !!!getting the specific parameter (code of the room from the url) from HomePage.js!!!
@@ -30,6 +29,7 @@ export default class Room extends Component {
         this.handleOnSendMessage = this.handleOnSendMessage.bind(this);
         this.sendMessageBackend = this.sendMessageBackend.bind(this);
         this.getRoomMessages = this.getRoomMessages.bind(this);
+        this.printMessage = this.printMessage.bind(this);
         this.getRoomDetails();
     }
 
@@ -45,7 +45,10 @@ export default class Room extends Component {
     */
 
     componentDidMount() {
-        this.interval = setInterval(this.getCurrentSong, 1000) // calling getCurrenSong function every second
+        this.interval = setInterval(() => {
+            this.getCurrentSong();
+            this.getRoomMessages();
+        }, 1000) // calling getCurrenSong function every second
     }
 
     componentWillUnmount() {
@@ -74,7 +77,6 @@ export default class Room extends Component {
                 this.authenticateSpotify();
             };
         });
-        this.getRoomMessages()
     }
 
     authenticateSpotify() {
@@ -130,53 +132,22 @@ export default class Room extends Component {
 
     getRoomMessages() {
         fetch("/api/get-room-messages").then((response) => {
-            if (response.ok) {
+            if (response.status === 200) {
                 return response.json();
             }
             else {
                 return {};
             }
         }).then((data) => {
-            console.log(data);
-        });
-    }
-
-    sendMessageBackend() {
-        const requestOptions = {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                content: this.state.msg,
-            }),
-        };
-
-        console.log(requestOptions);
-
-        fetch("/api/send-message", requestOptions)
-        .then((response) => {
-            if (response.ok) {
-                return response.json();
-            }
-            else {
-                return {};
+            // console.log(data);
+            var i;
+            for(i=0; i<data.length; i++) {
+                this.printMessage(data[i].author, data[i].content)
             }
         });
     }
 
-    handleOnSendMessage(message) {
-        this.setState({
-            messages: this.state.messages.concat({ 
-                author: {
-                    username: 'user2',
-                    id: 2,
-                },
-                text: message,
-                timestamp: +new Date(),
-                type: 'text',
-            }),
-            // msg: message,
-        });
-
+    sendMessageBackend(message) {
         const requestOptions = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -185,8 +156,6 @@ export default class Room extends Component {
             }),
         };
 
-        // console.log(requestOptions);
-
         fetch("/api/send-message", requestOptions)
         .then((response) => {
             if (response.ok) {
@@ -196,7 +165,29 @@ export default class Room extends Component {
                 return {};
             }
         });
-      }
+    }
+
+    printMessage(author, message) {
+        var author_id = (author === true) ? 1 : 2;
+        var author_name = (author === true) ? "me" : "them";
+        
+        this.setState({
+            messages: this.state.messages.concat({ 
+                author: {
+                    username: author_name,
+                    id: author_id,
+                },
+                text: message,
+                //timestamp: +new Date(),
+                type: 'text',
+            }),
+        });
+    }
+
+    handleOnSendMessage(message) {
+        this.printMessage(true, message);
+        this.sendMessageBackend(message);
+    }
 
     renderSettings() {
         return (
