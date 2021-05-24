@@ -30,3 +30,13 @@ html, body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+.chatbox {
+    position: fixed;
+    /*border: 1px solid blue;*/
+    width: 40%;
+    height: 500px;
+    top: -10%;
+    left: 100%;
+    transform: translate(20%, 0%);
+}

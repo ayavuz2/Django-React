@@ -33,17 +33,6 @@ export default class Room extends Component {
         this.getRoomDetails();
     }
 
-    /*
-    componentDidUpdate() {
-        if (this.state.msg !== "") {
-            console.log(this.state.msg)
-            this.sendMessageBackend();
-            this.state.msg = "";
-            console.log(this.state.msg)
-        }
-    }
-    */
-
     componentDidMount() {
         this.interval = setInterval(() => {
             this.getCurrentSong();
@@ -225,28 +214,31 @@ export default class Room extends Component {
             return this.renderSettings();
         };
         return (
-            <Grid container spacing={1}>
+            <Grid container spacing={1} justify="center" align="center">
                 <Grid item xs={12} align="center">
                     <Typography variant="h4" component="h4">
                         Code: {this.roomCode}
                     </Typography>
                 </Grid>
                 <MusicPlayer {...this.state.song} /* We can access the song data in MusicPlayer now, using this.props.(...)*/ />
-                {this.state.isHost ? this.renderSettingsButton(): null}
+                {this.state.isHost ? this.renderSettingsButton() : null}
                 <Grid item xs={12} align="center">
                     <Button variant="contained" color="secondary" onClick={ this.leaveButtonPressed }>
                         Leave Room
                     </Button>
                 </Grid>
-                <Grid item xs={12} align="center">
-                    <ChatBox 
-                        messages={this.state.messages} 
-                        userId={1} 
-                        onSendMessage={this.handleOnSendMessage} 
-                        width={'300px'} 
-                        height={'300px'} 
-                    />
-                </Grid>
+                
+                <div className='chatbox'>
+                    <Grid container justify="flex-end" align="flex-end">
+                        <ChatBox 
+                            messages={this.state.messages} 
+                            userId={1} 
+                            onSendMessage={this.handleOnSendMessage} 
+                            width={'100%'} 
+                            height={'500px'}
+                        />
+                    </Grid>
+                </div>
             </Grid>
         );
     }
